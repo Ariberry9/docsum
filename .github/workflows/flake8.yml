@@ -5,6 +5,9 @@ on: [push, pull_request]
 jobs:
   flake8:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cmc-csci040/docsum
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
