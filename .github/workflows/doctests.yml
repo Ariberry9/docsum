@@ -1,0 +1,21 @@
+name: doctests
+
+on: [push, pull_request]
+
+jobs:
+  doctests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python -m doctest -v tools/path_safety.py
+      - run: python -m doctest -v tools/ls.py
+      - run: python -m doctest -v tools/cat.py
+      - run: python -m doctest -v tools/grep.py
+      - run: python -m doctest -v tools/calculate.py
+      - run: python -m doctest -v chat.py
