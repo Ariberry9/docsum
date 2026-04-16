@@ -32,11 +32,13 @@ class Chat:
 
     def __init__(self):
         """
-        Initialize the Groq client, tools, and conversation history.
+        Initialize the client, tools, and conversation history.
         """
-        self.client = Groq(
-            api_key=os.environ.get("GROQ_API_KEY")
-        )
+        api_key = os.environ.get("GROQ_API_KEY")
+        if api_key:
+            self.client = Groq(api_key=api_key)
+        else:
+            self.client = None
 
         self.messages = [
             {
@@ -53,7 +55,10 @@ class Chat:
                 "type": "function",
                 "function": {
                     "name": "ls",
-                    "description": "List files in the current folder or a relative subfolder.",
+                    "description": (
+                        "List files in the current folder or a relative "
+                        "subfolder."
+                    ),
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -87,13 +92,18 @@ class Chat:
                 "type": "function",
                 "function": {
                     "name": "grep",
-                    "description": "Search for a regular expression in files matching a relative glob.",
+                    "description": (
+                        "Search for a regular expression in files matching "
+                        "a relative glob."
+                    ),
                     "parameters": {
                         "type": "object",
                         "properties": {
                             "pattern": {
                                 "type": "string",
-                                "description": "Regular expression to search for",
+                                "description": (
+                                    "Regular expression to search for"
+                                ),
                             },
                             "path": {
                                 "type": "string",
@@ -153,9 +163,12 @@ class Chat:
         """
         Send a user message to the model and return the assistant response.
         """
+        if self.client is None:
+            return "Error: API key not set"
+
         self.messages.append({
             "role": "user",
-            "content": message
+            "content": message,
         })
 
         while True:
@@ -168,7 +181,10 @@ class Chat:
 
             assistant_message = chat_completion.choices[0].message
 
-            if hasattr(assistant_message, "tool_calls") and assistant_message.tool_calls:
+            if (
+                hasattr(assistant_message, "tool_calls")
+                and assistant_message.tool_calls
+            ):
                 self.messages.append(assistant_message)
 
                 for tool_call in assistant_message.tool_calls:
@@ -189,7 +205,7 @@ class Chat:
             if isinstance(content, str):
                 match = re.fullmatch(
                     r'function=(\w+)>(\{.*\})</function>',
-                    content.strip()
+                    content.strip(),
                 )
                 if match:
                     tool_name = match.group(1)
@@ -198,13 +214,12 @@ class Chat:
 
                     self.messages.append({
                         "role": "assistant",
-                        "content": content
+                        "content": content,
                     })
                     self.messages.append({
                         "role": "user",
-                        "content": f"Tool result:\n{tool_result}"
+                        "content": f"Tool result:\n{tool_result}",
                     })
-
                     continue
 
             result = assistant_message.content
@@ -213,7 +228,7 @@ class Chat:
 
             self.messages.append({
                 "role": "assistant",
-                "content": result
+                "content": result,
             })
             return result
 
@@ -257,23 +272,22 @@ class Chat:
         return f"Error: unknown command /{command}"
 
 
-if __name__ == '__main__':
-    import readline
+if __name__ == "__main__":
     chat = Chat()
     try:
         while True:
-            user_input = input('chat> ')
+            user_input = input("chat> ")
 
             if user_input.startswith("/"):
                 response = chat.run_command(user_input)
                 print(response)
                 chat.messages.append({
                     "role": "user",
-                    "content": user_input
+                    "content": user_input,
                 })
                 chat.messages.append({
                     "role": "assistant",
-                    "content": response
+                    "content": response,
                 })
             else:
                 response = chat.send_message(user_input)
