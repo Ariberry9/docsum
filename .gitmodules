@@ -1,9 +1,9 @@
-[submodule "ariberry9.github.io"]
-	path = ariberry9.github.io
+[submodule "test_projects/project00"]
+	path = test_projects/project00
 	url = https://github.com/Ariberry9/ariberry9.github.io
-[submodule "markdown-compiler"]
-	path = markdown-compiler
+[submodule "test_projects/project01"]
+	path = test_projects/project01
 	url = https://github.com/Ariberry9/markdown-compiler
-[submodule "web-scrapping"]
-	path = web-scrapping
+[submodule "test_projects/project02"]
+	path = test_projects/project02
 	url = https://github.com/Ariberry9/web-scrapping
