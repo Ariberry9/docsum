@@ -21,6 +21,9 @@ class Chat:
     """
     A chat client that stores conversation history and supports local tools.
 
+    # I don't see any tests for the chat class for the actual
+    # LLM functionality; i.e. tests that have commands that don't start with /
+
     >>> chat = Chat()
     >>> isinstance(chat.messages, list)
     True
@@ -50,6 +53,10 @@ class Chat:
             },
         ]
 
+        # these tool schemas should be in the same file as the functions;
+        # the general rule is that everything about a function should 
+        # be in the same place, so that if you have to add/delete/modify
+        # anything, you only have to do it in one spot.
         self.tools = [
             {
                 "type": "function",
@@ -246,6 +253,7 @@ class Chat:
         >>> chat.run_command("/unknown")
         'Error: unknown command /unknown'
         """
+        # good job with this function
         parts = line.strip().split(maxsplit=2)
         command = parts[0][1:]
 
@@ -273,6 +281,10 @@ class Chat:
 
 
 if __name__ == "__main__":
+    # it is traditional to put all of this code into some type of "main"
+    # function (I called mine `repl` in class);
+    # this allows the code to be imported from another module and
+    # the main functionality still to be run
     chat = Chat()
     try:
         while True:
