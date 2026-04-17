@@ -15,7 +15,10 @@ def cat(path):
     True
     >>> "def cat(path):" in cat("tools/cat.py")
     True
+    >>> cat("img/demo.gif").startswith("Error:")
+    True
     """
+    
     if not is_path_safe(path):
         return "Error: unsafe path"
 

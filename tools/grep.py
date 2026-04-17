@@ -18,6 +18,8 @@ def grep(pattern, path):
     True
     >>> grep("zzzxxyyqqq_not_found_987654321", "tools/cat.py")
     ''
+    >>> grep("def ", "img/demo.gif")
+    ''
     """
     if not is_path_safe(path):
         return "Error: unsafe path"
