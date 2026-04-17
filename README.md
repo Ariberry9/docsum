@@ -33,7 +33,13 @@ The assistant can call the following tools automatically, or you can run them ma
 | `/grep <pattern> <path>` | Search for a regex across files |
 | `/calculate <expression>` | Evaluate a math expression |
 
-## Examples
+## Example with LLM
+
+This example shows the assistant answering a natural-language question by calling the LLM.
+
+```bash
+$ chat "what does the calculate tool do?"
+The calculate tool evaluates a mathematical expression and returns the result as a string.
 
 ### Exploring a Markdown Compiler
 
