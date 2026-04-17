@@ -12,6 +12,10 @@ jobs:
           python-version: "3.11"
       - run: |
           pip install -r requirements.txt
-          python -m coverage run -m doctest tools/*.py
+          python -m coverage run -m doctest tools/path_safety.py
+          python -m coverage run -a -m doctest tools/ls.py
+          python -m coverage run -a -m doctest tools/cat.py
+          python -m coverage run -a -m doctest tools/grep.py
+          python -m coverage run -a -m doctest tools/calculate.py
           python -m coverage run -a -m doctest chat.py
           python -m coverage report -m
