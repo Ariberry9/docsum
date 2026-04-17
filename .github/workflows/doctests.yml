@@ -7,12 +7,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: |
-        pip install -r requirements.txt
-        python -m doctest -v tools/*.py
-        python -m doctest -v chat.py
+          pip install -r requirements.txt
+          python -m doctest -v tools/path_safety.py
+          python -m doctest -v tools/ls.py
+          python -m doctest -v tools/cat.py
+          python -m doctest -v tools/grep.py
+          python -m doctest -v tools/calculate.py
+          python -m doctest -v chat.py
