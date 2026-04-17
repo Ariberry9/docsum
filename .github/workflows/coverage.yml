@@ -1,0 +1,17 @@
+name: coverage
+
+on: [push, pull_request]
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: |
+          pip install -r requirements.txt
+          python -m coverage run -m doctest tools/*.py
+          python -m coverage run -a -m doctest chat.py
+          python -m coverage report -m
