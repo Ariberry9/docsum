@@ -10,11 +10,11 @@ with files and perform computations, including:
 - is_path_safe: validate file paths for security
 """
 
-from .ls import ls
-from .cat import cat
-from .grep import grep
-from .calculate import calculate
-from .path_safety import is_path_safe
+from tools.ls import ls
+from tools.cat import cat
+from tools.grep import grep
+from tools.calculate import calculate
+from tools.path_safety import is_path_safe
 
 __all__ = [
     "ls",
