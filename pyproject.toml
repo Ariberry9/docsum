@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cmc-csci005-ariberry9"
+version = "0.1.0"
+description = "A command-line AI chat tool to explore codebases with natural language"
+requires-python = ">=3.8"
+dependencies = ["groq"]
+
+[project.scripts]
+chat = "chat:main"
