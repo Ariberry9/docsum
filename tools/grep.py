@@ -14,10 +14,19 @@ def grep(pattern, path):
 
     >>> grep("def cat", "../*.py")
     'Error: unsafe path'
-    >>> "def cat(path):" in grep("def cat", "tools/cat.py")
+
+    >>> grep("^def cat", "tools/cat.py")
+    'def cat(path):'
+
+    >>> output = grep("return", "tools/cat.py")
+    >>> "return f.read()" in output
     True
+    >>> 'return "Error: unsafe path"' in output
+    True
+
     >>> grep("zzzxxyyqqq_not_found_987654321", "tools/cat.py")
     ''
+
     >>> grep("def ", "img/demo.gif")
     ''
     """

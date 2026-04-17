@@ -11,14 +11,22 @@ def cat(path):
 
     >>> cat("../secret.txt")
     'Error: unsafe path'
-    >>> cat("this_file_should_not_exist_123.txt").startswith("Error:")
+
+    >>> missing = cat("this_file_should_not_exist_123.txt")
+    >>> missing.startswith("Error:")
     True
-    >>> "def cat(path):" in cat("tools/cat.py")
+
+    >>> output = cat("tools/cat.py")
+    >>> output.startswith('""')
     True
+    >>> "def cat(path):" in output
+    True
+    >>> "Return the contents of a safe text file." in output
+    True
+
     >>> cat("img/demo.gif").startswith("Error:")
     True
     """
-    
     if not is_path_safe(path):
         return "Error: unsafe path"
 

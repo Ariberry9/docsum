@@ -15,12 +15,22 @@ def ls(folder=None):
     If a folder is provided, list the files in that folder.
     Unsafe paths return an error message.
 
-    >>> "chat.py" in ls()
-    True
-    >>> "tools/ls.py" in ls("tools")
-    True
     >>> ls("..")
     'Error: unsafe path'
+
+    >>> output = ls()
+    >>> isinstance(output, str)
+    True
+    >>> "chat.py" in output
+    True
+    >>> "tools" in output
+    True
+
+    >>> output = ls("tools")
+    >>> "tools/ls.py" in output
+    True
+    >>> "tools/cat.py" in output
+    True
     """
     if folder is None:
         folder = "."
