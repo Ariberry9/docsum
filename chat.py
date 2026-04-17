@@ -28,6 +28,9 @@ class Chat:
     '4'
     >>> chat.run_command("/ls ..")
     'Error: unsafe path'
+    >>> chat.client = None
+    >>> chat.send_message("hello")
+    'Error: API key not set'
     """
 
     def __init__(self):
@@ -203,13 +206,30 @@ class Chat:
 
             content = assistant_message.content
             if isinstance(content, str):
-                match = re.fullmatch(
-                    r'function=(\w+)>(\{.*\})</function>',
+                match = re.search(
+                    r'function=(\w+)>\s*(\{.*?\})\s*</function>',
                     content.strip(),
+                    re.DOTALL,
                 )
                 if match:
                     tool_name = match.group(1)
-                    arguments = json.loads(match.group(2))
+                    raw_arguments = match.group(2).strip()
+
+                    try:
+                        arguments = json.loads(raw_arguments)
+                    except json.JSONDecodeError:
+                        start = raw_arguments.find("{")
+                        end = raw_arguments.rfind("}")
+                        if start != -1 and end != -1 and end >= start:
+                            arguments = json.loads(
+                                raw_arguments[start:end + 1]
+                            )
+                        else:
+                            return (
+                                "Error: could not parse tool arguments: "
+                                f"{raw_arguments}"
+                            )
+
                     tool_result = self.execute_tool(tool_name, arguments)
 
                     self.messages.append({
@@ -241,8 +261,8 @@ class Chat:
         '4'
         >>> chat.run_command("/ls ..")
         'Error: unsafe path'
-        >>> "def cat(path):" in chat.run_command("/grep def tools/cat.py")
-        True
+        >>> chat.run_command("/grep ^def tools/cat.py")
+        'def cat(path):'
         >>> chat.run_command("/unknown")
         'Error: unknown command /unknown'
         """
@@ -272,7 +292,10 @@ class Chat:
         return f"Error: unknown command /{command}"
 
 
-if __name__ == "__main__":
+def repl():
+    """
+    Run the interactive chat loop until interrupted by the user.
+    """
     chat = Chat()
     try:
         while True:
@@ -294,3 +317,7 @@ if __name__ == "__main__":
                 print(response)
     except KeyboardInterrupt:
         print()
+
+
+if __name__ == "__main__":
+    repl()
