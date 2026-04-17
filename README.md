@@ -4,7 +4,6 @@
 [![flake8](https://github.com/Ariberry9/docsum/actions/workflows/flake8.yml/badge.svg)](https://github.com/Ariberry9/docsum/actions/workflows/flake8.yml)
 [![integration](https://github.com/Ariberry9/docsum/actions/workflows/integration.yml/badge.svg)](https://github.com/Ariberry9/docsum/actions/workflows/integration.yml)
 [![PyPI](https://img.shields.io/pypi/v/cmc-csci005-ariberry9)](https://pypi.org/project/cmc-csci005-ariberry9/)
-![coverage](https://img.shields.io/badge/coverage-90%25-brightgreen)
 
 A command-line AI assistant that lets you explore and understand any codebase using natural language — just `cd` into a project and start asking questions.
 
