@@ -6,7 +6,7 @@ A command-line AI assistant that lets you explore and understand any codebase us
 [![flake8](https://github.com/Ariberry9/docsum/actions/workflows/flake8.yml/badge.svg)](https://github.com/Ariberry9/docsum/actions/workflows/flake8.yml)
 [![integration](https://github.com/Ariberry9/docsum/actions/workflows/integration.yml/badge.svg)](https://github.com/Ariberry9/docsum/actions/workflows/integration.yml)
 [![PyPI](https://img.shields.io/pypi/v/cmc-csci005-ariberry9)](https://pypi.org/project/cmc-csci005-ariberry9/)
-[![codecov](https://codecov.io/gh/Ariberry9/docsum/branch/main/graph/badge.svg)](https://codecov.io/gh/Ariberry9/docsum)
+![coverage](https://img.shields.io/badge/coverage-90%25-brightgreen)
 
 ![demo](img/demo.gif)
 
