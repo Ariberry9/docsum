@@ -15,6 +15,9 @@ def ls(folder=None):
     If a folder is provided, list the files in that folder.
     Unsafe paths return an error message.
 
+    # these test are a bit "cheesy";
+    # it's very reasonable to actually just list the full output of these commands
+    # the same goes for your cat/grep functions as well
     >>> "chat.py" in ls()
     True
     >>> "tools/ls.py" in ls("tools")
