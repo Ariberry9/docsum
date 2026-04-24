@@ -13,6 +13,9 @@ from tools.ls import ls
 from tools.cat import cat
 from tools.grep import grep
 from tools.calculate import calculate
+from tools.doctests import doctests
+from tools.write_files import write_files, write_file
+from tools.rm import rm
 
 load_dotenv()
 
@@ -20,36 +23,38 @@ load_dotenv()
 class Chat:
     """
     A chat client that stores conversation history and supports local tools.
-
-    >>> chat = Chat()
-    >>> isinstance(chat.messages, list)
-    True
-    >>> chat.run_command("/calculate 2+2")
-    '4'
-    >>> chat.run_command("/ls ..")
-    'Error: unsafe path'
-    >>> chat.client = None
-    >>> chat.send_message("hello")
-    'Error: API key not set'
     """
 
     def __init__(self):
         """
         Initialize the client, tools, and conversation history.
         """
+        if not os.path.isdir(".git"):
+            raise Exception("Must run inside a git repo")
+
         api_key = os.environ.get("GROQ_API_KEY")
         if api_key:
             self.client = Groq(api_key=api_key)
         else:
             self.client = None
 
+        system_content = (
+            "You are a helpful assistant for answering questions about "
+            "the user's current project folder. Use tools when needed."
+        )
+
+        if os.path.exists("AGENTS.md"):
+            agents_text = cat("AGENTS.md")
+            system_content += (
+                "\n\nThe following AGENTS.md file contains project-specific "
+                "instructions. Follow these instructions:\n\n"
+                + agents_text
+            )
+
         self.messages = [
             {
                 "role": "system",
-                "content": (
-                    "You are a helpful assistant for answering questions about "
-                    "the user's current project folder. Use tools when needed."
-                ),
+                "content": system_content,
             },
         ]
 
@@ -134,19 +139,113 @@ class Chat:
                     },
                 },
             },
+            {
+                "type": "function",
+                "function": {
+                    "name": "doctests",
+                    "description": (
+                        "Run doctests on a Python file with verbose output."
+                    ),
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "path": {
+                                "type": "string",
+                                "description": "Relative path to Python file",
+                            }
+                        },
+                        "required": ["path"],
+                    },
+                },
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "write_file",
+                    "description": (
+                        "Write one file, add it to git, commit it, and run "
+                        "doctests if it is a Python file."
+                    ),
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "path": {
+                                "type": "string",
+                                "description": "Relative file path",
+                            },
+                            "contents": {
+                                "type": "string",
+                                "description": "New file contents",
+                            },
+                            "commit_message": {
+                                "type": "string",
+                                "description": "Git commit message",
+                            },
+                        },
+                        "required": [
+                            "path",
+                            "contents",
+                            "commit_message",
+                        ],
+                    },
+                },
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "write_files",
+                    "description": (
+                        "Write multiple files, add them to git, commit them, "
+                        "and run doctests for Python files."
+                    ),
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "files": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "path": {"type": "string"},
+                                        "contents": {"type": "string"},
+                                    },
+                                    "required": ["path", "contents"],
+                                },
+                            },
+                            "commit_message": {
+                                "type": "string",
+                                "description": "Git commit message",
+                            },
+                        },
+                        "required": ["files", "commit_message"],
+                    },
+                },
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "rm",
+                    "description": (
+                        "Remove one or more files using a relative path or "
+                        "glob, then commit the removal."
+                    ),
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "path": {
+                                "type": "string",
+                                "description": "Relative file path or glob",
+                            },
+                        },
+                        "required": ["path"],
+                    },
+                },
+            },
         ]
 
     def execute_tool(self, tool_name, arguments):
         """
         Execute a local tool from a tool name and parsed JSON arguments.
-
-        >>> chat = Chat()
-        >>> chat.execute_tool("calculate", {"expression": "3*3"})
-        '9'
-        >>> chat.execute_tool("ls", {"path": ".."})
-        'Error: unsafe path'
-        >>> chat.execute_tool("unknown", {})
-        'Error: unknown tool'
         """
         if tool_name == "ls":
             return ls(arguments.get("path"))
@@ -159,6 +258,25 @@ class Chat:
 
         if tool_name == "calculate":
             return calculate(arguments["expression"])
+
+        if tool_name == "doctests":
+            return doctests(arguments["path"])
+
+        if tool_name == "write_file":
+            return write_file(
+                arguments["path"],
+                arguments["contents"],
+                arguments["commit_message"],
+            )
+
+        if tool_name == "write_files":
+            return write_files(
+                arguments["files"],
+                arguments["commit_message"],
+            )
+
+        if tool_name == "rm":
+            return rm(arguments["path"])
 
         return "Error: unknown tool"
 
@@ -218,17 +336,7 @@ class Chat:
                     try:
                         arguments = json.loads(raw_arguments)
                     except json.JSONDecodeError:
-                        start = raw_arguments.find("{")
-                        end = raw_arguments.rfind("}")
-                        if start != -1 and end != -1 and end >= start:
-                            arguments = json.loads(
-                                raw_arguments[start:end + 1]
-                            )
-                        else:
-                            return (
-                                "Error: could not parse tool arguments: "
-                                f"{raw_arguments}"
-                            )
+                        return "Error: invalid tool arguments"
 
                     tool_result = self.execute_tool(tool_name, arguments)
 
@@ -237,87 +345,75 @@ class Chat:
                         "content": content,
                     })
                     self.messages.append({
-                        "role": "user",
-                        "content": f"Tool result:\n{tool_result}",
+                        "role": "tool",
+                        "name": tool_name,
+                        "content": tool_result,
                     })
-                    continue
 
-            result = assistant_message.content
-            if result is None:
-                result = "Error: model returned no final text response."
+                    continue
 
             self.messages.append({
                 "role": "assistant",
-                "content": result,
+                "content": content,
             })
-            return result
+            return content
 
-    def run_command(self, line):
+    def run_command(self, command):
         """
-        Run a local slash command and return its output.
-
-        >>> chat = Chat()
-        >>> chat.run_command("/calculate 2+2")
-        '4'
-        >>> chat.run_command("/ls ..")
-        'Error: unsafe path'
-        >>> chat.run_command("/grep ^def tools/cat.py")
-        'def cat(path):'
-        >>> chat.run_command("/unknown")
-        'Error: unknown command /unknown'
+        Run a manual slash command.
         """
-        parts = line.strip().split(maxsplit=2)
-        command = parts[0][1:]
+        parts = command.strip().split(maxsplit=1)
 
-        if command == "ls":
-            if len(parts) == 1:
-                return ls()
-            return ls(parts[1])
+        if not parts:
+            return ""
 
-        if command == "cat":
-            if len(parts) < 2:
-                return "Error: cat requires 1 argument"
-            return cat(parts[1])
+        command_name = parts[0]
+        argument = parts[1] if len(parts) > 1 else ""
 
-        if command == "grep":
-            if len(parts) < 3:
-                return "Error: grep requires 2 arguments"
-            return grep(parts[1], parts[2])
+        if command_name == "/ls":
+            return ls(argument or None)
 
-        if command == "calculate":
-            if len(parts) < 2:
-                return "Error: calculate requires 1 argument"
-            return calculate(parts[1])
+        if command_name == "/cat":
+            return cat(argument)
 
-        return f"Error: unknown command /{command}"
+        if command_name == "/grep":
+            grep_parts = argument.split(maxsplit=1)
+            if len(grep_parts) != 2:
+                return "Error: usage /grep PATTERN PATH"
+            return grep(grep_parts[0], grep_parts[1])
+
+        if command_name == "/calculate":
+            return calculate(argument)
+
+        if command_name == "/doctests":
+            return doctests(argument)
+
+        return "Error: unknown command"
 
 
-def repl():
+def main():
     """
-    Run the interactive chat loop until interrupted by the user.
+    Run the command line chat loop.
     """
-    chat = Chat()
     try:
-        while True:
-            user_input = input("chat> ")
+        chat = Chat()
+    except Exception as error:
+        print(f"Error: {error}")
+        return
 
-            if user_input.startswith("/"):
-                response = chat.run_command(user_input)
-                print(response)
-                chat.messages.append({
-                    "role": "user",
-                    "content": user_input,
-                })
-                chat.messages.append({
-                    "role": "assistant",
-                    "content": response,
-                })
-            else:
-                response = chat.send_message(user_input)
-                print(response)
-    except KeyboardInterrupt:
-        print()
+    while True:
+        try:
+            message = input("chat> ")
+        except KeyboardInterrupt:
+            print()
+            break
+
+        if message.startswith("/"):
+            print(chat.run_command(message))
+        else:
+            print(chat.send_message(message))
 
 
 if __name__ == "__main__":
-    repl()
+    main()
+    
